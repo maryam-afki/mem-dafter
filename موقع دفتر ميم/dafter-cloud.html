@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>دفتر التحضير السحابي | سمة للأطفال</title>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<style>
+:root{--dark:#38312A;--sage:#9AA67E;--sage-d:#75825E;--gold:#C9A876;--cream:#FBF7EF;--sand:#F1E8D5}
+*{box-sizing:border-box}
+body{font-family:Tahoma,Arial,sans-serif;margin:0;background:var(--cream);color:var(--dark)}
+header{background:var(--dark);color:#F7F1E3;padding:12px 16px;display:flex;align-items:center;gap:12px}
+header img{width:110px;background:#fff;border-radius:10px;padding:4px}
+header h1{font-size:18px;margin:0}
+header p{margin:2px 0 0;font-size:12px;color:var(--gold)}
+.wrap{max-width:900px;margin:16px auto;padding:0 14px 40px}
+.card{background:#fff;border:1.5px solid #E5DCC6;border-radius:14px;padding:16px;margin:12px 0}
+input,textarea{width:100%;font-family:inherit;font-size:14px;padding:10px;border:1.5px solid #D9CFB6;border-radius:10px;background:#FFFEFA}
+textarea{min-height:70px;resize:vertical;line-height:1.9}
+label{font-size:13px;font-weight:bold;display:block;margin:12px 0 5px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:600px){.row{grid-template-columns:1fr}}
+button{font-family:inherit;cursor:pointer;border:none;border-radius:10px;padding:11px 18px;font-size:14px;font-weight:bold}
+.btn-dark{background:var(--dark);color:#fff}
+.btn-sage{background:var(--sage-d);color:#fff}
+.btn-line{background:#fff;border:1.5px solid var(--dark);color:var(--dark)}
+.small{font-size:12px;color:#8A8172}
+.hidden{display:none!important}
+.day{border:2px solid var(--sage);border-radius:14px;margin:12px 0;overflow:hidden;background:#fff}
+.day-h{background:var(--sage-d);color:#fff;padding:10px 14px;font-weight:bold;font-size:15px}
+.day-b{padding:12px 14px}
+.save-status{position:sticky;top:0;padding:8px 12px;border-radius:10px;font-size:13px;margin:10px 0;border:1px solid}
+.save-status.cloud{background:#E7F3E7;border-color:#9AA67E;color:#3d5a3d}
+.save-status.busy{background:#FFF6E3;border-color:#C9A876;color:#7a5c22}
+.save-status.local{background:#F3EFE6;border-color:#D9CFB6;color:#786F66}
+.warn{background:#FDF0F0;border:1.5px solid #d99;color:#8a2f2f;border-radius:12px;padding:12px;font-size:13px;line-height:2}
+code{direction:ltr;display:inline-block;background:#f3f3f3;padding:1px 6px;border-radius:6px}
+#printArea{display:none}
+@page{size:A4;margin:12mm}
+@media print{
+  body{background:#fff}
+  .no-print{display:none!important}
+  #printArea{display:block!important;color:#000}
+  #printArea .p-head{display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #38312A;padding-bottom:8px;margin-bottom:10px}
+  #printArea .p-head img{width:90px}
+  #printArea table{width:100%;border-collapse:collapse;font-size:11px}
+  #printArea th{background:#38312A;color:#fff;padding:6px;border:1px solid #38312A}
+  #printArea td{border:1px solid #999;padding:6px;vertical-align:top;white-space:pre-wrap}
+  #printArea h2{margin:6px 0}
+}
+</style>
+</head>
+<body>
+
+<header class="no-print">
+  <img src="samah-logo-white.png" alt="سمة للأطفال" onerror="this.style.display='none'">
+  <div>
+    <h1>دفتر التحضير السحابي — سمة للأطفال</h1>
+    <p>حساب خاص لكل معلمة • حفظ على الإنترنت • طباعة بهوية الروضة</p>
+  </div>
+</header>
+
+<div class="wrap no-print">
+
+  <div id="cfgWarn" class="warn hidden">
+    <b>تنبيه:</b> لم يتم ربط Firebase بعد — الموقع يعمل حالياً حفظاً محلياً فقط على هذا الجهاز.<br>
+    لإكمال الربط: افتحي الملف <code>dafter-cloud.html</code> والصقي إعدادات مشروعك مكان <code>FIREBASE_CONFIG</code> (الخطوات أرسلها لك بالترتيب).
+  </div>
+
+  <div id="loginBox" class="card">
+    <h2 style="margin:0 0 6px">دخول المعلمات</h2>
+    <p class="small">كل معلمة تدخل ببريدها وكلمة مرورها الخاصة التي تنشئينها لها من لوحة Firebase. تحضيرها محفوظ باسمها فقط ولا تراه غيرها.</p>
+    <label>البريد الإلكتروني</label>
+    <input id="email" type="email" dir="ltr" placeholder="noura@samah.edu" autocomplete="username">
+    <label>كلمة المرور</label>
+    <input id="password" type="password" placeholder="••••••" autocomplete="current-password">
+    <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
+      <button class="btn-dark" id="loginBtn" onclick="login()">دخول إلى دفتري</button>
+    </div>
+    <p id="loginMsg" class="small" style="color:#a33"></p>
+    <div class="card" style="background:var(--cream);margin-top:14px">
+      <b style="font-size:13px">للمديرة — كيف تضيفين معلمة جديدة؟</b>
+      <ol class="small" style="line-height:2">
+        <li>من Firebase Console ← Authentication ← Users ← Add user</li>
+        <li>اكتبي بريد المعلمة وكلمة مرور وأعطيها إياها.</li>
+        <li>المعلمة تدخل من رابط Vercel وتحضر — يحفظ تلقائياً في حسابها.</li>
+      </ol>
+    </div>
+  </div>
+
+  <div id="appBox" class="hidden">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+      <h2 style="margin:6px 0">أهلاً <span id="who"></span></h2>
+      <div style="display:flex;gap:8px">
+        <button class="btn-line" onclick="logout()">خروج</button>
+        <button class="btn-sage" onclick="doPrint()">معاينة وطباعة / PDF</button>
+      </div>
+    </div>
+    <div id="saveStatus" class="save-status local">جارٍ الاتصال...</div>
+
+    <div class="card">
+      <h3 style="margin:0">معلومات الأسبوع</h3>
+      <div class="row">
+        <div><label>اسم المعلمة (يظهر في الطباعة)</label><input id="f_teacher" placeholder="مثال: نورة القحطاني"></div>
+        <div><label>الصف / الفصل</label><input id="f_class" placeholder="مثال: تمهيدي ب"></div>
+      </div>
+      <div class="row">
+        <div><label>الوحدة</label><input id="f_unit" placeholder="مثال: كل شيء عني"></div>
+        <div><label>الأسبوع</label><input id="f_week" placeholder="مثال: الأسبوع الثاني"></div>
+      </div>
+      <div><label>التاريخ (من - إلى)</label><input id="f_date" placeholder="مثال: 28 سبتمبر - 2 أكتوبر"></div>
+      <label>جدولي العام للأسبوع</label>
+      <textarea id="f_schedule" placeholder="اكتبي جدولك: الأحد ... الاثنين ..."></textarea>
+      <label>أفكاري وأنشطتي المميزة هذا الأسبوع</label>
+      <textarea id="f_ideas" placeholder="أفكار، وسائل، قصص، أناشيد..."></textarea>
+    </div>
+
+    <div id="days"></div>
+
+    <div class="card">
+      <label>ملاحظات عامة / احتياجات</label>
+      <textarea id="f_notes" placeholder="خامات أحتاجها، تنسيق مع الإدارة..."></textarea>
+      <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+        <button class="btn-dark" onclick="doPrint()">طباعة / حفظ PDF</button>
+        <button class="btn-line" onclick="clearWeek()">مسح تحضير هذا الأسبوع (حسابي فقط)</button>
+      </div>
+      <p class="small">للحفظ PDF: من نافذة الطباعة اختاري حفظ كـ PDF بدل الطابعة. كل حفظ يذهب لحسابك السحابي فقط.</p>
+    </div>
+  </div>
+</div>
+
+<div id="printArea">
+  <div class="p-head">
+    <div>
+      <div style="font-size:18px;font-weight:bold">روضة سمة للأطفال</div>
+      <div style="font-size:12px">دفتر التحضير الأسبوعي • ننمو بالحب والاكتشاف</div>
+      <div id="p_meta" style="font-size:11px;margin-top:6px"></div>
+    </div>
+    <img src="samah-logo-dark.png" alt="شعار">
+  </div>
+  <h2 id="p_title"></h2>
+  <div id="p_schedule" style="font-size:11px;margin-bottom:8px"></div>
+  <div id="p_ideas" style="font-size:11px;margin-bottom:8px"></div>
+  <table id="p_table">
+    <tr><th style="width:11%">اليوم</th><th style="width:30%">الهدف + النشاط الكبير</th><th style="width:30%">أنشطة صغيرة ومراكز</th><th style="width:29%">التواصل مع الأسرة / ملاحظات</th></tr>
+  </table>
+  <div style="display:flex;justify-content:space-between;margin-top:14px;font-size:11px">
+    <span>توقيع المعلمة: ....................</span>
+    <span>توقيع المديرة: ....................</span>
+    <span>التاريخ: ............</span>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   الخطوة الوحيدة المطلوبة منك: الصقي إعدادات Firebase هنا
+   Firebase Console ← Project settings ← Your apps ← Web app
+   ============================================================ */
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyC66x-pNLP8j9IVmQvXcgCGEnqIp-bI-sQ",
+  authDomain: "mem-dafter.firebaseapp.com",
+  projectId: "mem-dafter",
+  storageBucket: "mem-dafter.firebasestorage.app",
+  messagingSenderId: "141041018254",
+  appId: "1:141041018254:web:b59d4f453d465f678ff0dF"
+};
+
+const DAYS = [
+  {id:'sun',name:'الأحد'},
+  {id:'mon',name:'الاثنين'},
+  {id:'tue',name:'الثلاثاء'},
+  {id:'wed',name:'الأربعاء'},
+  {id:'thu',name:'الخميس'}
+];
+
+let db = null, auth = null, currentUid = null, currentEmail = null;
+let cloudReady = false, saveTimer = null, firstLoadDone = false;
+
+function firebaseConfigured(){
+  return FIREBASE_CONFIG.apiKey && FIREBASE_CONFIG.apiKey !== "PASTE_HERE";
+}
+
+function setStatus(mode, text){
+  const el = document.getElementById('saveStatus');
+  el.className = 'save-status ' + mode;
+  el.textContent = text;
+}
+
+function initFirebase(){
+  if(!firebaseConfigured()){
+    document.getElementById('cfgWarn').classList.remove('hidden');
+    setStatus('local','وضع محلي: لم يتم ربط Firebase بعد');
+    return;
+  }
+  try{
+    if(typeof firebase === 'undefined'){
+      setStatus('local','تعذر تحميل Firebase — تحققي من الإنترنت');
+      return;
+    }
+    firebase.initializeApp(FIREBASE_CONFIG);
+    auth = firebase.auth();
+    db = firebase.firestore();
+    // حفظ offline احتياطي — يتجاهل الخطأ لو تبويب آخر مفتوح
+    db.enablePersistence({synchronizeTabs:true}).catch(()=>{});
+    cloudReady = true;
+    document.getElementById('cfgWarn').classList.add('hidden');
+    setStatus('local','تم ربط السحابة — سجلي الدخول');
+    auth.onAuthStateChanged(user=>{
+      if(user){ enterCloud(user.uid, user.email); }
+      else { showLogin(); }
+    });
+  }catch(e){
+    console.error(e);
+    setStatus('local','خطأ في إعداد Firebase: '+e.message);
+  }
+}
+
+function localKey(){ return 'samah_cloud_backup_'+(currentEmail||'nobody'); }
+
+function showLogin(){
+  currentUid=null; currentEmail=null; firstLoadDone=false;
+  document.getElementById('appBox').classList.add('hidden');
+  document.getElementById('loginBox').classList.remove('hidden');
+}
+
+async function login(){
+  const e = document.getElementById('email').value.trim();
+  const p = document.getElementById('password').value;
+  const msg = document.getElementById('loginMsg');
+  msg.textContent='';
+  if(!e||!p){ msg.textContent='اكتبي البريد وكلمة المرور'; return; }
+  if(!cloudReady){ msg.textContent='الربط السحابي غير مكتمل — أكملي FIREBASE_CONFIG أولاً'; return; }
+  document.getElementById('loginBtn').disabled = true;
+  try{
+    await auth.signInWithEmailAndPassword(e,p);
+    // onAuthStateChanged سيفتح الدفتر
+  }catch(err){
+    console.error(err);
+    if(err.code==='auth/user-not-found') msg.textContent='لا يوجد حساب بهذا البريد — أضيفيه من Firebase أولاً';
+    else if(err.code==='auth/wrong-password'||err.code==='auth/invalid-credential') msg.textContent='كلمة المرور غير صحيحة';
+    else if(err.code==='auth/invalid-email') msg.textContent='صيغة البريد غير صحيحة';
+    else msg.textContent='تعذر الدخول: '+err.message;
+  }
+  document.getElementById('loginBtn').disabled = false;
+}
+
+async function logout(){
+  try{ if(auth) await auth.signOut(); }catch(e){}
+  document.getElementById('password').value='';
+  showLogin();
+}
+
+function enterCloud(uid, email){
+  currentUid=uid; currentEmail=email; firstLoadDone=false;
+  document.getElementById('loginBox').classList.add('hidden');
+  document.getElementById('appBox').classList.remove('hidden');
+  document.getElementById('who').textContent=email;
+  buildDays();
+  loadCloud();
+}
+
+function buildDays(){
+  const wrap=document.getElementById('days');
+  wrap.innerHTML='';
+  DAYS.forEach(d=>{
+    const div=document.createElement('div');
+    div.className='day';
+    div.innerHTML='<div class="day-h">'+d.name+'</div><div class="day-b">'
+      +'<label>هدف اليوم / الموضوع</label><textarea id="d_'+d.id+'_goal"></textarea>'
+      +'<label>نشاط المجموعة الكبيرة</label><textarea id="d_'+d.id+'_big"></textarea>'
+      +'<label>أنشطة صغيرة ومراكز</label><textarea id="d_'+d.id+'_small"></textarea>'
+      +'<label>التواصل مع الأسرة / ملاحظات</label><textarea id="d_'+d.id+'_note"></textarea>'
+      +'</div>';
+    wrap.appendChild(div);
+  });
+  document.querySelectorAll('#appBox input,#appBox textarea').forEach(el=>{
+    el.addEventListener('input', queueSave);
+  });
+}
+
+function collect(){
+  const g=id=>document.getElementById(id).value;
+  const o={info:{teacher:g('f_teacher'),unit:g('f_unit'),class:g('f_class'),week:g('f_week'),date:g('f_date'),schedule:g('f_schedule'),ideas:g('f_ideas'),notes:g('f_notes')},days:{}};
+  DAYS.forEach(d=>{
+    o.days[d.id]={goal:g('d_'+d.id+'_goal'),big:g('d_'+d.id+'_big'),small:g('d_'+d.id+'_small'),note:g('d_'+d.id+'_note')};
+  });
+  return o;
+}
+
+function fill(o){
+  if(!o) return;
+  const s=id=>document.getElementById(id);
+  s('f_teacher').value=(o.info&&o.info.teacher)||'';
+  s('f_unit').value=(o.info&&o.info.unit)||'';
+  s('f_class').value=(o.info&&o.info.class)||'';
+  s('f_week').value=(o.info&&o.info.week)||'';
+  s('f_date').value=(o.info&&o.info.date)||'';
+  s('f_schedule').value=(o.info&&o.info.schedule)||'';
+  s('f_ideas').value=(o.info&&o.info.ideas)||'';
+  s('f_notes').value=(o.info&&o.info.notes)||'';
+  DAYS.forEach(d=>{
+    const v=(o.days&&o.days[d.id])||{};
+    s('d_'+d.id+'_goal').value=v.goal||'';
+    s('d_'+d.id+'_big').value=v.big||'';
+    s('d_'+d.id+'_small').value=v.small||'';
+    s('d_'+d.id+'_note').value=v.note||'';
+  });
+}
+
+function queueSave(){
+  if(!currentUid) return;
+  setStatus('busy','جارٍ الحفظ...');
+  // نسخة محلية فورية كاحتياط
+  try{ localStorage.setItem(localKey(), JSON.stringify(collect())); }catch(e){}
+  clearTimeout(saveTimer);
+  saveTimer=setTimeout(saveCloud, 800);
+}
+
+async function saveCloud(){
+  if(!currentUid||!cloudReady) return;
+  try{
+    await db.collection('preps').doc(currentUid).set({
+      email: currentEmail,
+      data: collect(),
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, {merge:true});
+    const d=new Date();
+    setStatus('cloud','محفوظ على الإنترنت ✓ '+d.toLocaleTimeString('ar'));
+  }catch(e){
+    console.error(e);
+    setStatus('local','تعذر الحفظ السحابي — محفوظ محلياً فقط: '+e.message);
+  }
+}
+
+async function loadCloud(){
+  setStatus('busy','جارٍ تحميل دفترك...');
+  let remote=null;
+  try{
+    const doc=await db.collection('preps').doc(currentUid).get();
+    if(doc.exists && doc.data() && doc.data().data) remote=doc.data().data;
+  }catch(e){
+    console.error(e);
+    setStatus('local','تعذر التحميل السحابي — سيتم عرض النسخة المحلية إن وجدت');
+  }
+  if(remote){ fill(remote); }
+  else{
+    try{
+      const b=localStorage.getItem(localKey());
+      if(b) fill(JSON.parse(b));
+    }catch(e){}
+  }
+  firstLoadDone=true;
+  // استمع للتحديثات من أجهزة أخرى لنفس الحساب فقط
+  try{
+    db.collection('preps').doc(currentUid).onSnapshot(doc=>{
+      if(!firstLoadDone) return;
+      if(!doc.exists) return;
+      const d=doc.data();
+      if(!d||!d.data) return;
+      // لا تعيد الكتابة فوق ما تكتبينه الآن — حدثي فقط لو اختلف والخانات غير مركزة
+      const active=document.activeElement;
+      const typing=active&&(active.tagName==='TEXTAREA'||active.tagName==='INPUT');
+      if(typing) return;
+      fill(d.data);
+      setStatus('cloud','تم تحديث النسخة من جهاز آخر ✓');
+    });
+  }catch(e){}
+  setStatus('cloud', remote?'محفوظ على الإنترنت ✓':'دفتر جديد — ابدئي الكتابة وسيحفظ تلقائياً');
+}
+
+async function clearWeek(){
+  if(!confirm('مسح تحضير هذا الأسبوع من حسابك السحابي فقط؟'))return;
+  fill({info:{},days:{}});
+  try{ localStorage.removeItem(localKey()); }catch(e){}
+  if(cloudReady&&currentUid){
+    try{ await db.collection('preps').doc(currentUid).delete(); setStatus('cloud','تم المسح من السحابة'); }
+    catch(e){ setStatus('local','تعذر المسح السحابي: '+e.message); }
+  }
+}
+
+function doPrint(){
+  if(currentUid&&cloudReady){ saveCloud(); }
+  const o=collect();
+  const teacher=o.info.teacher||currentEmail||'—';
+  document.getElementById('p_meta').innerHTML='المعلمة: <b>'+escapeHtml(teacher)+'</b> • الصف: '+escapeHtml(o.info.class||'—')+' • '+escapeHtml(o.info.week||'')+' • '+escapeHtml(o.info.date||'');
+  document.getElementById('p_title').textContent='وحدة: '+(o.info.unit||'—');
+  document.getElementById('p_schedule').innerHTML=o.info.schedule?('<b>الجدول:</b><br>'+escapeHtml(o.info.schedule).replace(/\n/g,'<br>')):'';
+  document.getElementById('p_ideas').innerHTML=o.info.ideas?('<b>أفكار وأنشطة:</b><br>'+escapeHtml(o.info.ideas).replace(/\n/g,'<br>')):'';
+  const tbl=document.getElementById('p_table');
+  tbl.querySelectorAll('tr:not(:first-child)').forEach(r=>r.remove());
+  DAYS.forEach(d=>{
+    const v=o.days[d.id]||{};
+    const tr=document.createElement('tr');
+    const cell=s=>(s&&s.trim())?escapeHtml(s):'—';
+    tr.innerHTML='<td><b>'+d.name+'</b><br>'+cell(v.goal)+'</td><td>'+cell(v.big)+'</td><td>'+cell(v.small)+'</td><td>'+cell(v.note)+'</td>';
+    tbl.appendChild(tr);
+  });
+  const nr=document.createElement('tr');
+  nr.innerHTML='<td colspan="4"><b>ملاحظات عامة:</b> '+escapeHtml(o.info.notes||'—')+'</td>';
+  tbl.appendChild(nr);
+  setTimeout(()=>window.print(),300);
+}
+
+function escapeHtml(s){
+  return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+document.addEventListener('DOMContentLoaded', initFirebase);
+</script>
+</body>
+</html>

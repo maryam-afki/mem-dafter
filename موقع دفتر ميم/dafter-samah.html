@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>دفتر التحضير | سمة للأطفال</title>
+<style>
+:root{--dark:#38312A;--sage:#9AA67E;--sage-d:#75825E;--gold:#C9A876;--cream:#FBF7EF;--sand:#F1E8D5}
+*{box-sizing:border-box}
+body{font-family:Tahoma,Arial,sans-serif;margin:0;background:var(--cream);color:var(--dark)}
+header{background:var(--dark);color:#F7F1E3;padding:12px 16px;display:flex;align-items:center;gap:12px}
+header img{width:110px;background:#fff;border-radius:10px;padding:4px}
+header h1{font-size:18px;margin:0}
+header p{margin:2px 0 0;font-size:12px;color:var(--gold)}
+.wrap{max-width:900px;margin:16px auto;padding:0 14px 40px}
+.card{background:#fff;border:1.5px solid #E5DCC6;border-radius:14px;padding:16px;margin:12px 0}
+input,textarea,select{width:100%;font-family:inherit;font-size:14px;padding:10px;border:1.5px solid #D9CFB6;border-radius:10px;background:#FFFEFA}
+textarea{min-height:70px;resize:vertical;line-height:1.9}
+label{font-size:13px;font-weight:bold;display:block;margin:12px 0 5px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:600px){.row{grid-template-columns:1fr}}
+button{font-family:inherit;cursor:pointer;border:none;border-radius:10px;padding:11px 18px;font-size:14px;font-weight:bold}
+.btn-dark{background:var(--dark);color:#fff}
+.btn-gold{background:var(--gold);color:var(--dark)}
+.btn-sage{background:var(--sage-d);color:#fff}
+.btn-line{background:#fff;border:1.5px solid var(--dark);color:var(--dark)}
+.small{font-size:12px;color:#8A8172}
+.hidden{display:none!important}
+.day{border:2px solid var(--sage);border-radius:14px;margin:12px 0;overflow:hidden;background:#fff}
+.day-h{background:var(--sage-d);color:#fff;padding:10px 14px;font-weight:bold;font-size:15px}
+.day-b{padding:12px 14px}
+.save-status{position:sticky;top:0;background:#EAF0DC;border:1px solid var(--sage);color:#4c5a3a;padding:8px 12px;border-radius:10px;font-size:13px;margin:10px 0}
+/* الطباعة */
+#printArea{display:none}
+@page{size:A4;margin:12mm}
+@media print{
+  body{background:#fff}
+  .no-print{display:none!important}
+  #printArea{display:block!important;color:#000}
+  #printArea .p-head{display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #38312A;padding-bottom:8px;margin-bottom:10px}
+  #printArea .p-head img{width:90px}
+  #printArea table{width:100%;border-collapse:collapse;font-size:11px}
+  #printArea th{background:#38312A;color:#fff;padding:6px;border:1px solid #38312A}
+  #printArea td{border:1px solid #999;padding:6px;vertical-align:top;white-space:pre-wrap}
+  #printArea h2{margin:6px 0}
+}
+</style>
+</head>
+<body>
+
+<header class="no-print">
+  <img src="samah-logo-white.png" alt="سمة للأطفال" onerror="this.style.display='none'">
+  <div>
+    <h1>دفتر التحضير الإلكتروني — سمة للأطفال</h1>
+    <p>لكل معلمة صفحتها الخاصة • تحضير الأسبوع • طباعة بهوية الروضة</p>
+  </div>
+</header>
+
+<div class="wrap no-print">
+
+  <!-- تسجيل الدخول -->
+  <div id="loginBox" class="card">
+    <h2 style="margin:0 0 6px">دخول المعلمات</h2>
+    <p class="small">كل معلمة لها اسم دخول وكلمة مرور خاصة. لا ترى معلمة تحضير غيرها. البيانات محفوظة على هذا الجهاز فقط في هذه النسخة التجريبية.</p>
+    <label>اسم المعلمة (يوزر)</label>
+    <input id="username" placeholder="مثال: نورة القحطاني">
+    <label>كلمة المرور</label>
+    <input id="password" type="password" placeholder="••••••">
+    <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
+      <button class="btn-dark" onclick="login()">دخول</button>
+      <button class="btn-gold" onclick="register()">حساب جديد لهذه المعلمة</button>
+    </div>
+    <p id="loginMsg" class="small" style="color:#a33"></p>
+    <div class="card" style="background:var(--cream);margin-top:14px">
+      <b style="font-size:13px">كيف تستخدمينه؟</b>
+      <ol class="small" style="line-height:2">
+        <li>اكتبي اسمك وكلمة مرور ثم اضغطي «حساب جديد» أول مرة فقط.</li>
+        <li>عبّئي تحضير الأسبوع — يحفظ تلقائياً.</li>
+        <li>اضغطي «معاينة وطباعة PDF» للطباعة بهوية الروضة.</li>
+      </ol>
+    </div>
+  </div>
+
+  <!-- الدفتر -->
+  <div id="appBox" class="hidden">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+      <h2 style="margin:6px 0">أهلاً <span id="who"></span> 🌿</h2>
+      <div style="display:flex;gap:8px">
+        <button class="btn-line" onclick="logout()">خروج</button>
+        <button class="btn-sage" onclick="doPrint()">معاينة وطباعة / PDF 🖨️</button>
+      </div>
+    </div>
+    <div id="saveStatus" class="save-status">تم الحفظ تلقائياً ✓</div>
+
+    <div class="card">
+      <h3 style="margin:0">معلومات الأسبوع</h3>
+      <div class="row">
+        <div><label>الوحدة</label><input id="f_unit" placeholder="مثال: كل شيء عني"></div>
+        <div><label>الصف / الفصل</label><input id="f_class" placeholder="مثال: تمهيدي ب"></div>
+      </div>
+      <div class="row">
+        <div><label>الأسبوع</label><input id="f_week" placeholder="مثال: الأسبوع الثاني"></div>
+        <div><label>التاريخ (من - إلى)</label><input id="f_date" placeholder="مثال: 28 سبتمبر - 2 أكتوبر"></div>
+      </div>
+      <label>جدولي العام للأسبوع</label>
+      <textarea id="f_schedule" placeholder="اكتبي جدولك: الأحد ... الاثنين ..."></textarea>
+      <label>أفكاري وأنشطتي المميزة هذا الأسبوع</label>
+      <textarea id="f_ideas" placeholder="أفكار، وسائل، قصص، أناشيد..."></textarea>
+    </div>
+
+    <div id="days"></div>
+
+    <div class="card">
+      <label>ملاحظات عامة / احتياجات</label>
+      <textarea id="f_notes" placeholder="خامات أحتاجها، تنسيق مع الإدارة..."></textarea>
+      <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+        <button class="btn-dark" onclick="doPrint()">طباعة / حفظ PDF</button>
+        <button class="btn-line" onclick="clearWeek()">مسح تحضير هذا الأسبوع</button>
+      </div>
+      <p class="small">للحفظ PDF: من نافذة الطباعة اختاري «حفظ كـ PDF» بدل الطابعة.</p>
+    </div>
+  </div>
+</div>
+
+<!-- نسخة الطباعة بهوية الروضة -->
+<div id="printArea">
+  <div class="p-head">
+    <div>
+      <div style="font-size:18px;font-weight:bold">روضة سمة للأطفال</div>
+      <div style="font-size:12px">دفتر التحضير الأسبوعي • ننمو بالحب والاكتشاف</div>
+      <div id="p_meta" style="font-size:11px;margin-top:6px"></div>
+    </div>
+    <img src="samah-logo-dark.png" alt="شعار">
+  </div>
+  <h2 id="p_title"></h2>
+  <div id="p_schedule" style="font-size:11px;margin-bottom:8px"></div>
+  <div id="p_ideas" style="font-size:11px;margin-bottom:8px"></div>
+  <table id="p_table">
+    <tr><th style="width:11%">اليوم</th><th style="width:30%">الهدف + النشاط الكبير</th><th style="width:30%">أنشطة صغيرة ومراكز</th><th style="width:29%">التواصل مع الأسرة / ملاحظات</th></tr>
+  </table>
+  <div style="display:flex;justify-content:space-between;margin-top:14px;font-size:11px">
+    <span>توقيع المعلمة: ....................</span>
+    <span>توقيع المديرة: ....................</span>
+    <span>التاريخ: ............</span>
+  </div>
+</div>
+
+<script>
+const DAYS = [
+  {id:'sun',name:'الأحد'},
+  {id:'mon',name:'الاثنين'},
+  {id:'tue',name:'الثلاثاء'},
+  {id:'wed',name:'الأربعاء'},
+  {id:'thu',name:'الخميس'}
+];
+let currentUser = null;
+
+function getUsers(){
+  try{return JSON.parse(localStorage.getItem('samah_dafter_users_v1')||'{}')}catch(e){return{}}
+}
+function setUsers(u){localStorage.setItem('samah_dafter_users_v1',JSON.stringify(u))}
+function dataKey(u){return 'samah_dafter_data_v1_'+u}
+
+function register(){
+  const u = username.value.trim(), p = password.value;
+  if(!u||!p){loginMsg.textContent='اكتبي الاسم وكلمة المرور أولاً';return}
+  const users=getUsers();
+  if(users[u]){loginMsg.textContent='هذا الاسم موجود — اضغطي دخول';return}
+  users[u]={pass:btoa(unescape(encodeURIComponent(p))),created:Date.now()};
+  setUsers(users);
+  loginMsg.textContent='';
+  enter(u);
+}
+function login(){
+  const u = username.value.trim(), p = password.value;
+  const users=getUsers();
+  if(!users[u]){loginMsg.textContent='لا يوجد حساب بهذا الاسم — اضغطي حساب جديد أول مرة';return}
+  if(users[u].pass!==btoa(unescape(encodeURIComponent(p)))){loginMsg.textContent='كلمة المرور غير صحيحة';return}
+  enter(u);
+}
+function enter(u){
+  currentUser=u;
+  loginBox.classList.add('hidden');
+  appBox.classList.remove('hidden');
+  who.textContent=u;
+  buildDays();
+  load();
+}
+function logout(){currentUser=null;appBox.classList.add('hidden');loginBox.classList.remove('hidden');password.value='';}
+
+function buildDays(){
+  days.innerHTML='';
+  DAYS.forEach(d=>{
+    const div=document.createElement('div');
+    div.className='day';
+    div.innerHTML=`<div class="day-h">${d.name}</div><div class="day-b">
+      <label>هدف اليوم / الموضوع</label><textarea id="d_${d.id}_goal"></textarea>
+      <label>نشاط المجموعة الكبيرة</label><textarea id="d_${d.id}_big"></textarea>
+      <label>أنشطة صغيرة ومراكز</label><textarea id="d_${d.id}_small"></textarea>
+      <label>التواصل مع الأسرة / ملاحظات</label><textarea id="d_${d.id}_note"></textarea>
+    </div>`;
+    days.appendChild(div);
+  });
+  document.querySelectorAll('#appBox input,#appBox textarea').forEach(el=>{
+    el.addEventListener('input',save);
+  });
+}
+function collect(){
+  const o={info:{unit:f_unit.value,class:f_class.value,week:f_week.value,date:f_date.value,schedule:f_schedule.value,ideas:f_ideas.value,notes:f_notes.value},days:{}};
+  DAYS.forEach(d=>{
+    o.days[d.id]={goal:document.getElementById('d_'+d.id+'_goal').value,big:document.getElementById('d_'+d.id+'_big').value,small:document.getElementById('d_'+d.id+'_small').value,note:document.getElementById('d_'+d.id+'_note').value};
+  });
+  return o;
+}
+let t=null;
+function save(){
+  if(!currentUser)return;
+  clearTimeout(t);
+  saveStatus.textContent='جارٍ الحفظ...';
+  t=setTimeout(()=>{
+    localStorage.setItem(dataKey(currentUser),JSON.stringify(collect()));
+    const d=new Date();
+    saveStatus.textContent='تم الحفظ تلقائياً ✓ '+d.toLocaleTimeString('ar');
+  },500);
+}
+function load(){
+  let o=null;
+  try{o=JSON.parse(localStorage.getItem(dataKey(currentUser))||'null')}catch(e){}
+  if(!o)return;
+  f_unit.value=o.info.unit||'';f_class.value=o.info.class||'';f_week.value=o.info.week||'';f_date.value=o.info.date||'';f_schedule.value=o.info.schedule||'';f_ideas.value=o.info.ideas||'';f_notes.value=o.info.notes||'';
+  DAYS.forEach(d=>{
+    const v=(o.days&&o.days[d.id])||{};
+    document.getElementById('d_'+d.id+'_goal').value=v.goal||'';
+    document.getElementById('d_'+d.id+'_big').value=v.big||'';
+    document.getElementById('d_'+d.id+'_small').value=v.small||'';
+    document.getElementById('d_'+d.id+'_note').value=v.note||'';
+  });
+}
+function clearWeek(){
+  if(!confirm('مسح كل تحضير هذا الأسبوع لهذه المعلمة فقط؟'))return;
+  localStorage.removeItem(dataKey(currentUser));
+  buildDays();f_unit.value=f_class.value=f_week.value=f_date.value=f_schedule.value=f_ideas.value=f_notes.value='';
+}
+function doPrint(){
+  save();
+  const o=collect();
+  p_meta.innerHTML=`المعلمة: <b>${currentUser}</b> • الصف: ${o.info.class||'—'} • ${o.info.week||''} • ${o.info.date||''}`;
+  p_title.textContent='وحدة: '+(o.info.unit||'—');
+  p_schedule.innerHTML=o.info.schedule?('<b>الجدول:</b><br>'+o.info.schedule.replace(/\n/g,'<br>')):'';
+  p_ideas.innerHTML=o.info.ideas?('<b>أفكار وأنشطة:</b><br>'+o.info.ideas.replace(/\n/g,'<br>')):'';
+  const tbl=document.getElementById('p_table');
+  tbl.querySelectorAll('tr:not(:first-child)').forEach(r=>r.remove());
+  DAYS.forEach(d=>{
+    const v=o.days[d.id];
+    const tr=document.createElement('tr');
+    const esc=s=>s||'—';
+    tr.innerHTML=`<td><b>${d.name}</b><br>${esc(v.goal)}</td><td>${esc(v.big)}</td><td>${esc(v.small)}</td><td>${esc(v.note)}</td>`;
+    tbl.appendChild(tr);
+  });
+  const nr=document.createElement('tr');
+  nr.innerHTML=`<td colspan="4"><b>ملاحظات عامة:</b> ${(o.info.notes||'—')}</td>`;
+  tbl.appendChild(nr);
+  setTimeout(()=>window.print(),300);
+}
+</script>
+</body>
+</html>
